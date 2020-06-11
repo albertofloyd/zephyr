@@ -1018,17 +1018,25 @@ static void espi_flash_isr(const struct device *dev)
 	}
 
 	if (status & MCHP_ESPI_FC_STS_CHAN_EN_CHG) {
+		struct espi_event evt;
+
 		/* Ensure to clear only relevant bit */
 		ESPI_FC_REGS->STS = MCHP_ESPI_FC_STS_CHAN_EN_CHG;
 
-		if (status & MCHP_ESPI_FC_STS_CHAN_EN) {
-			espi_init_flash(dev);
-			/* Indicate flash channel is ready to eSPI master */
-			ESPI_CAP_REGS->FC_RDY = MCHP_ESPI_FC_READY;
 			evt.evt_data = 1;
-		}
 
-		espi_send_callbacks(&data->callbacks, dev, evt);
+			espi_send_callbacks(&data->callbacks, dev, evt);
+		} else {
+			espi_init_flash(dev);
+
+			evt.evt_details = ESPI_CHANNEL_FLASH;
+			evt.evt_type = ESPI_BUS_EVENT_CHANNEL_READY;
+			if (status & MCHP_ESPI_FC_STS_CHAN_EN) {
+				evt.evt_data = 1;
+			}
+
+			espi_send_callbacks(&data->callbacks, dev, evt);
+		}
 	}
 }
 #endif
