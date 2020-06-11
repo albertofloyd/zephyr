@@ -889,7 +889,6 @@ static void espi_flash_isr(struct device *dev)
 {
 	u32_t status;
 	struct espi_xec_data *data = (struct espi_xec_data *)(dev->driver_data);
-	struct espi_event evt = { ESPI_BUS_EVENT_CHANNEL_READY, 0, 0 };
 
 	status = ESPI_FC_REGS->STS;
 	LOG_DBG("%s %x", __func__, status);
@@ -902,16 +901,29 @@ static void espi_flash_isr(struct device *dev)
 	}
 
 	if (status & MCHP_ESPI_FC_STS_CHAN_EN_CHG) {
+		struct espi_event evt;
+
 		/* Ensure to clear only relevant bit */
 		ESPI_FC_REGS->STS = MCHP_ESPI_FC_STS_CHAN_EN_CHG;
-		espi_init_flash(dev);
 
-		evt.evt_details = ESPI_CHANNEL_FLASH;
-		if (status & MCHP_ESPI_FC_STS_CHAN_EN) {
+		if (!IS_ENABLED(CONFIG_ESPI_AUTOMATIC_WARNING_ACKNOWLEDGE)) {
+
+			evt.evt_type = ESPI_BUS_EVENT_CHANNEL_CHANGED,
+			evt.evt_details =  ESPI_CHANNEL_FLASH,
 			evt.evt_data = 1;
-		}
 
-		espi_send_callbacks(&data->callbacks, dev, evt);
+			espi_send_callbacks(&data->callbacks, dev, evt);
+		} else {
+			espi_init_flash(dev);
+
+			evt.evt_details = ESPI_CHANNEL_FLASH;
+			evt.evt_type = ESPI_BUS_EVENT_CHANNEL_READY;
+			if (status & MCHP_ESPI_FC_STS_CHAN_EN) {
+				evt.evt_data = 1;
+			}
+
+			espi_send_callbacks(&data->callbacks, dev, evt);
+		}
 	}
 }
 #endif
