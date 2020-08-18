@@ -14,6 +14,9 @@
 #include <logging/log.h>
 LOG_MODULE_DECLARE(espi, CONFIG_ESPI_LOG_LEVEL);
 
+/* Custom VW wire */
+#define ESPI_CUSTOM_VWIRE  (ESPI_VWIRE_SIGNAL_DNX_WARN + 1)
+
 /* eSPI host entity address  */
 #define DEST_SLV_ADDR         0x02u
 #define SRC_SLV_ADDR          0x21u
@@ -668,6 +671,22 @@ int espi_test(void)
 	if (ret) {
 		LOG_ERR("eSPI VW handshake failed %d", ret);
 		return ret;
+	}
+
+	/* Attempt to send custom VW */
+	LOG_INF("Attempt to send custom virtual wire");
+	ret = espi_send_vwire(espi_dev, ESPI_CUSTOM_VWIRE, 0);
+	if (ret) {
+		LOG_ERR("Fail to send custom vwire err: %d", ret);
+	} else {
+		LOG_INF("Custom virtual send successfully");
+	}
+
+	ret = espi_send_vwire(espi_dev, ESPI_CUSTOM_VWIRE, 1);
+	if (ret) {
+		LOG_ERR("Fail to send custom vwire");
+	} else {
+		LOG_INF("Custom virtual send successfully");
 	}
 
 	/*  Attempt to use OOB channel to read temperature, regardless of

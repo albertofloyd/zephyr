@@ -12,4 +12,24 @@
 		/* MCHP_GPIO_0054 */
 		rsm-gpios = <&gpio_040_076 12 GPIO_ACTIVE_HIGH>;
 	};
+
+	vws {
+		compatible = "microchip,xec-espi-custom-vw";
+		ocb_vw0:  ocb0 {
+			vw_index = <50>;
+			vw_initial_value = <0xFF>;
+			/* SMVW06 Register */
+			reg = <6>;
+			src_bit = <0>;
+		};
+	};
+};
+
+
+&espi0 {
+	status = "okay";
+	io_girq = <19>;
+	vw_girq = <24>;
+	pc_girq = <15>;
+	custom_vws = <&ocb_vw0>;
 };
