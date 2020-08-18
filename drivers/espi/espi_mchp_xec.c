@@ -86,6 +86,16 @@ struct xec_signal {
 	uint8_t dir;
 };
 
+struct custom_vw {
+	uint8_t vw_index;
+	uint8_t value;
+};
+
+struct xec_custom_signal {
+	struct xec_signal reg_info;
+	struct custom_vw vw_info;
+};
+
 enum mchp_msvw_regs {
 	MCHP_MSVW00,
 	MCHP_MSVW01,
@@ -135,6 +145,21 @@ enum mchp_smvw_regs {
  *  47h   | MSVW07 | res          | res          | res       | HOST_C10    |
  *  4Ah   | MSVW08 | res          | res          | DNX_WARN  | res         |
  */
+
+ /* Custom virtual wires */
+
+#if DT_NODE_HAS_STATUS(ESPI_CUSTOM_VW, okay)
+static struct xec_signal custom_vw_dt = {
+	.xec_reg_idx = DT_INST_PROP(inst, reg_index),
+	.bit = DT_INST_PROP(inst, reg_bit),
+	.dir = ESPI_SLAVE_TO_MASTER
+};
+#endif
+static const struct xec_signal custom_vw = {
+	.xec_reg_idx = MCHP_SMVW04,
+	.bit = ESPI_VWIRE_SRC_ID0,
+	.dir = ESPI_SLAVE_TO_MASTER
+};
 
 static const struct xec_signal vw_tbl[] = {
 	/* MSVW00 */
@@ -202,7 +227,24 @@ static const struct xec_signal vw_tbl[] = {
 	/* MSVW08 */
 	[ESPI_VWIRE_SIGNAL_DNX_WARN]      = {MCHP_MSVW08, ESPI_VWIRE_SRC_ID1,
 					     ESPI_MASTER_TO_SLAVE},
+#if DT_NODE_HAS_STATUS(ESPI_CUSTOM_VW, okay)
+	&custom_vw_dt,
+#endif
+	custom_vw,
 };
+
+static const struct xec_custom_signal custom_vw_tbl[] = {
+#if DT_NODE_HAS_STATUS(ESPI_CUSTOM_VW, okay)
+	{  .reg_info = custom_vw_dt,
+	   .vw_info = { DT_INST_PROP(inst, vw_index),
+			 DT_INST_PROP(inst, init_value) },
+	},
+#endif
+	{ .reg_info = custom_vw,
+	  .vw_info =  {0x50, 0xFF},
+	},
+};
+
 
 static uint32_t slave_rx_mem[MAX_OOB_BUFFER_SIZE];
 static uint32_t slave_tx_mem[MAX_OOB_BUFFER_SIZE];
@@ -735,6 +777,35 @@ static void send_slave_bootdone(const struct device *dev)
 }
 #endif
 
+static void configure_custom_virtual_wires(void)
+{
+	int custom_vw_count = ARRAY_SIZE(custom_vw_tbl);
+	struct xec_custom_signal custom_vw;
+
+	for (int i = 0; i < custom_vw_count; i++) {
+		custom_vw = custom_vw_tbl[i];
+		uint8_t xec_id = custom_vw.reg_info.xec_reg_idx;
+		uint8_t src_id = custom_vw.reg_info.bit;
+
+		if (custom_vw.reg_info.dir != ESPI_SLAVE_TO_MASTER) {
+			LOG_WRN("Unsupported custom VW direction");
+			continue;
+		}
+
+		/* Keep the INDEX field to 0*/
+		ESPI_SMVW_REG * reg = &(ESPI_S2M_VW_REGS->SMVW00) + xec_id;
+
+		reg->STOM = (VW_RST_SRC_SYS_RESET & 0x03u) |
+			    ((custom_vw.vw_info.value & 0x0Fu) << 4);
+		reg->STOM = (VW_RST_SRC_ESPI_RESET & 0x03u) |
+			    ((custom_vw.vw_info.value & 0x0Fu) << 4);
+
+		uint8_t *p8 = (uint8_t *)&reg->SRC;
+		*(p8 + (uintptr_t) src_id) = custom_vw.vw_info.value;
+		mec_espi_smvw_index_set(reg, custom_vw.vw_info.vw_index);
+	}
+}
+
 #ifdef CONFIG_ESPI_OOB_CHANNEL
 static void espi_init_oob(const struct device *dev)
 {
@@ -1132,6 +1203,7 @@ static void vw_host_rst_warn_isr(const struct device *dev)
 static void vw_sus_warn_isr(const struct device *dev)
 {
 	notify_host_warning(dev, ESPI_VWIRE_SIGNAL_SUS_WARN);
+	configure_custom_virtual_wires();
 }
 
 static void vw_oob_rst_isr(const struct device *dev)
