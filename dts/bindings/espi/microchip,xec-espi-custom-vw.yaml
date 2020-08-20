@@ -1,0 +1,21 @@
+# Copyright (c) 2019 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+description: Microchip ESPI controller
+
+compatible: "microchip,xec-espi-custom-vw"
+
+include: espi,custom-vw.yaml
+
+properties:
+    reg:
+      type: int
+      description: eSPI virtual hw block register to be used for custom virtual
+        wire group. This should not clash with registers already used.
+        virtual wires.
+      required: true
+
+    src_bit:
+      type: int
+      description: Bit index within the eSPI virtual wire group.
+

@@ -26,3 +26,13 @@ properties:
       type: int
       description: soc group irq index for eSPI peripheral channel
       required: true
+
+    custom_vws:
+      type: phandle-array
+      required: false
+      description: |
+          Additional custom virtual wires that can be sent over eSPI bus.
+          These in addition to the pre-defined (canonical) system and platform
+          signals already included in the eSPI specification.
+          Both eSPI master and eSPI slave should define the custom wires with
+          the same index and same bitmap.

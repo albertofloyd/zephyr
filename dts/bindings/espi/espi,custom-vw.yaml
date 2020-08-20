@@ -1,0 +1,20 @@
+# Copyright (c) 2019 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+description: ESPI controller
+
+compatible: "espi,custom-vw"
+
+properties:
+    vw_index:
+      type: int
+      description: The unused virtual wire slot specification, it should not
+          clash with the index of the pre-defined groups of virtual wires.
+          See Table 9, section 5.2.2.1 from eSPI spec.
+      required: true
+
+    vw_initial_value:
+      type: int
+      description: The initial value of the virtual wire group, which defines
+          the value of each of the individual wires packed in the group.
+      required: true
