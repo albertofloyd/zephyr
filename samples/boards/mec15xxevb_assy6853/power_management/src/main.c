@@ -9,10 +9,11 @@
 LOG_MODULE_DECLARE(mec15_brd_test);
 #include "power_mgmt.h"
 
-#define MAX_CYCLES 5ul
+#define MAX_CYCLES 10ul
 
 void main(void)
 {
+	/*
 	test_pwr_mgmt_singlethread(false, MAX_CYCLES);
 
 	test_pwr_mgmt_singlethread(true, MAX_CYCLES);
@@ -20,4 +21,7 @@ void main(void)
 	test_pwr_mgmt_multithread(false, MAX_CYCLES);
 
 	test_pwr_mgmt_multithread(true, MAX_CYCLES);
+	*/
+
+	test_pwr_mgmt_multithread_async(true, MAX_CYCLES);
 }

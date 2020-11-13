@@ -35,4 +35,7 @@ int test_pwr_mgmt_singlethread(bool use_logging, uint8_t cycles);
  */
 int test_pwr_mgmt_multithread(bool use_logging, uint8_t cycles);
 
+
+int test_pwr_mgmt_multithread_async(bool use_logging, uint8_t cycles);
+
 #endif /* __TEST_PWRMGMT_H__ */
