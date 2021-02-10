@@ -10,4 +10,9 @@
 void main(void)
 {
 	printk("Hello World! %s\n", CONFIG_BOARD);
+
+	while (1) {
+		k_sleep(K_SECONDS(1));
+		printk("xo");
+	}
 }
