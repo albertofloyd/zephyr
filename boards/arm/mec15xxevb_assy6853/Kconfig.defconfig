@@ -70,4 +70,9 @@ config TACH_XEC
 	default y
 	depends on SENSOR
 
+config 32KHZ_CLOCK_DEBUG
+	bool "Enable 32KHz mirror pin"
+	default n
+
+
 endif # BOARD_MEC15XXEVB_ASSY6853
