@@ -287,6 +287,7 @@ static void gpio_gpio_xec_port_isr(const struct device *dev)
 	 * aggregator result register
 	 */
 	girq_result = MCHP_GIRQ_RESULT(config->girq_id);
+	printk("gpio_isr");
 
 	/* Clear source register in aggregator before firing callbacks */
 	REG32(MCHP_GIRQ_SRC_ADDR(config->girq_id)) = girq_result;
