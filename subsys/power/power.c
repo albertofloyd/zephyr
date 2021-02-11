@@ -184,11 +184,13 @@ void _sys_resume(void)
 	 * Call _sys_pm_idle_exit_notification_disable() if this
 	 * notification is not required.
 	 */
+	printk("resume starts");
 	if (!post_ops_done) {
 		post_ops_done = 1;
 		sys_pm_notify_power_state_exit(pm_state);
 		_sys_pm_power_state_exit_post_ops(pm_state);
 	}
+	printk("resume done");
 }
 
 #if CONFIG_DEVICE_POWER_MANAGEMENT
