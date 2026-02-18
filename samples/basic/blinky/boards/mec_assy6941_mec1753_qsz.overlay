@@ -1,0 +1,24 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/ {
+	aliases {
+		led0 = &led0;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+		led0: led_0 {
+			/* JP149 1-2 needs to be closed
+			 * GPIO 156 - LED 7
+			 */
+			gpios = <MCHP_GPIO_DECODE_156 GPIO_ACTIVE_HIGH>;
+		};
+	};
+};
+
+/* Enable GPIO controller if not already enabled */
+&gpio_140_176 {
+	status = "okay";
+};
