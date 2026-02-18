@@ -1,0 +1,32 @@
+/*
+ * Copyright (c) 2026 Realtek Semiconductor Corporation.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/ {
+	board_power: resources {
+		   compatible = "intel-rvp,board-power";
+		   /* GPIO0 (A0) for pwrg, GPIO16 (B0) for rsm, update as needed */
+		   pwrg-gpios = <&gpioa 0 GPIO_ACTIVE_LOW>;
+		   rsm-gpios = <&gpiob 0 GPIO_ACTIVE_HIGH>;
+	   };
+};
+
+&espi0 {
+	status = "okay";
+	pinctrl-0 = <&espi_alert_gpio003 &espi_cs_gpio004
+			 &espi_io3_gpio005 &espi_io2_gpio006
+			 &espi_io1_gpio007 &espi_io0_gpio008
+			 &espi_clk_gpio009 &espi_reset_gpio020>;
+	pinctrl-names = "default";
+};
+
+/* Enable GPIO controller if not already enabled */
+&gpioa {
+	status = "okay";
+};
+
+&gpiob {
+	status = "okay";
+};
