@@ -1,0 +1,35 @@
+/*
+ * Copyright (c) 2026 Intel Corporation.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#include <zephyr/dt-bindings/gpio/gpio.h>
+#include <zephyr/dt-bindings/gpio/realtek-gpio.h>
+
+/ {
+	aliases {
+		sw0 = &button0;
+		tachsim = &tach_pulse_gen;
+	};
+
+	gpio_keys {
+		compatible = "gpio-keys";
+		button0: button_0 {
+			gpios = <RTS5912_GPIO002 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			label = "SW3 Button";
+		};
+	};
+
+	gpio_leds {
+		compatible = "gpio-leds";
+		tach_pulse_gen: tach_sim_output {
+			gpios = <RTS5912_GPIO053 GPIO_ACTIVE_HIGH>;
+			label = "Tach Pulse Gen";
+		};
+	};
+};
+
+&tach0 {
+	status = "okay";
+	pulses-per-round = <2>;
+};
