@@ -1,0 +1,16 @@
+sample:
+  name: Tachometer Accuracy Test
+  description: >
+    Generic tachometer driver validation sample with loopback testing.
+    Uses button to trigger pulse generation at various RPM levels,
+    validates driver accuracy, and provides statistical analysis.
+
+common:
+  filter: dt_alias_exists("tachsim") and dt_nodelabel_enabled("tach0")
+  tags: sensor tachometer gpio
+  harness: console
+
+tests:
+  test.drivers.sensor.tach_accuracy:
+    platform_allow:
+      - rts5912_evb
