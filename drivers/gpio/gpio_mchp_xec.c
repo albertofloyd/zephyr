@@ -158,7 +158,7 @@ static int gpio_xec_configure(const struct device *dev, gpio_pin_t pin, gpio_fla
 
 	ret = gpio_xec_validate_flags(flags);
 	if (ret != 0) {
-		LOG_WRN("invalid flags");
+		LOG_WRN("invalid flags %d", ret);
 		return ret;
 	}
 
@@ -211,13 +211,16 @@ static int gpio_xec_configure(const struct device *dev, gpio_pin_t pin, gpio_fla
 
 	if ((flags & GPIO_OUTPUT) != 0) { /* set direction to output */
 		cr1_new = output_config(cr1_new, cr1, flags);
+		LOG_WRN("OUT Port:%x pin:0x%x", (uint32_t)devcfg->port_base, pin);
 	}
 
 	if ((flags & GPIO_INPUT) != 0) {                /* input direction also requested */
 		cr1_new &= ~BIT(MEC_GPIO_CR1_INPD_POS); /* enable input pad */
+		LOG_WRN("IN Port:%x pin:0x%x", (uint32_t)devcfg->port_base, pin);
 	}
 
 	cr1 = sys_read32(cr1_addr);
+	LOG_WRN("cr1:%x cr1_new:%x cr1_msk:%x", cr1, cr1_new, (cr1 & msk));
 	if ((cr1 & msk) != cr1_new) {
 		/* first write of CR1 use CR1 output control to write control and
 		 * output state in one register write. GPIO hardware will reflect
@@ -230,6 +233,8 @@ static int gpio_xec_configure(const struct device *dev, gpio_pin_t pin, gpio_fla
 		/* Enable parallel output bit for this pin. Parallel input is always enabled. */
 		sys_set_bit(cr1_addr, MEC_GPIO_CR1_OCR_POS);
 	}
+
+	LOG_WRN("%x=%x", cr1_addr, sys_read32(cr1_addr));
 
 	return 0;
 }
