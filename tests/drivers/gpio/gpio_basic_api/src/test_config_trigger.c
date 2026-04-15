@@ -14,6 +14,7 @@ static void callback(const struct device *dev,
 		     struct gpio_callback *gpio_cb, uint32_t pins)
 {
 	/*= checkpoint: pins should be marked with correct pin number bit =*/
+	TC_PRINT("%s %x\n", __func__, (uint32_t)BIT(PIN_IN));
 	zassert_equal(pins, BIT(PIN_IN),
 		      "unexpected pins %x", pins);
 
@@ -137,9 +138,11 @@ ZTEST(after_flash_gpio_config_trigger, test_gpio_config_trigger)
 	zassert_ok(ret, "config PIN_OUT failed");
 
 	/* 4. Wait a bit and ensure that interrupt happened at most once */
+	TC_PRINT("Wait for 10s\n");
 	k_sleep(K_MSEC(10));
 	zassert_between_inclusive(cb_cnt, 0, 1, "Got %d interrupts", cb_cnt);
 
+	TC_PRINT("Callbacks %d\n", cb_cnt);
 	ret = gpio_pin_interrupt_configure(dev_in, PIN_IN, GPIO_INT_DISABLE);
 	if (ret == -ENOTSUP || ret == -ENOSYS) {
 		TC_PRINT("GPIO_INT_DISABLE not supported.\n");
