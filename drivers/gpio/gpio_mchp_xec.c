@@ -12,12 +12,15 @@
 #include <zephyr/device.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/gpio/gpio_utils.h>
+#include <zephyr/logging/log.h>
 #include <zephyr/dt-bindings/gpio/gpio.h>
 #include <zephyr/dt-bindings/interrupt-controller/mchp-xec-ecia.h>
 #include <zephyr/dt-bindings/pinctrl/mchp-xec-pinctrl.h>
 #include <zephyr/sys/slist.h>
 
 #define XEC_GPIO_EDGE_DLY_COUNT 8
+
+LOG_MODULE_REGISTER(gpio, CONFIG_GPIO_LOG_LEVEL);
 
 /* port_base is the base address of the array of 32 CR1 registers.
  * pin in [0, 31] is the GPIO pin in this port.
@@ -155,11 +158,17 @@ static int gpio_xec_configure(const struct device *dev, gpio_pin_t pin, gpio_fla
 
 	ret = gpio_xec_validate_flags(flags);
 	if (ret != 0) {
+		LOG_WRN("invalid flags");
 		return ret;
 	}
 
 	cr1_addr = XEC_GPIO_CR1_ADDR(devcfg->port_base, pin);
 	cr1 = sys_read32(cr1_addr);
+
+	if (MEC_GPIO_CR1_MUX_GET(cr1) != MEC_GPIO_CR1_MUX_GPIO) {
+		LOG_WRN("Port:0x%08x pin:%x not in GPIO mode. CTRL[%x]=%x",
+			   (uint32_t)devcfg->port_base, pin, (uint32_t)cr1_addr, cr1);
+	}
 
 	if (flags == GPIO_DISCONNECTED) {
 		enc_gpio = XEC_GPIO_ENCODE(devcfg->port_base, pin);
