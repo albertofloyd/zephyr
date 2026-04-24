@@ -16,6 +16,17 @@ config TEST_DRIVER_FLASH_SIZE
 	  support the get_size() API, leave this set as -1 to skip the test.
 	  For the STM32 devices, the flash size is directly given by the soc DTSI.
 
+config TEST_AREA_OFFSET
+	hex "Flash test area start offset"
+	default 0x40000 if FLASH_RENESAS_RA_OSPI_B
+	default 0xff000
+	help
+	  Byte offset within the flash device under test at which the test
+	  area begins. Must be sector-aligned. The test requires at least
+	  two erase sectors of free space between this offset and the end
+	  of the device. Reduce this value when using flash chips smaller
+	  than 1 MB (e.g. set 0x7e000 for a 512 KB device with 4 KB sectors).
+
 config TEST_FORCE_STORAGE_PARTITION
 	bool "Force testing the storage partition area"
 	default n
