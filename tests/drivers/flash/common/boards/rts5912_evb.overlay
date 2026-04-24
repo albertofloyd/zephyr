@@ -1,0 +1,33 @@
+/*
+ * Copyright (c) 2025 Realtek Semiconductor Corporation
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#include <zephyr/dt-bindings/gpio/gpio.h>
+
+
+/*
+ * Realtek RTS5912 Evaluation Board has a Winbond W25X40CL
+ * (4 Mbit = 512 KB) external SPI NOR flash.
+ */
+
+
+&spi0 {
+	status = "okay";
+	pinctrl-0 = <&spi_mosi_gpio096 &spi_miso_gpio097 &spi_clk_gpio099>;
+	pinctrl-names = "default";
+	cs-gpios = <&gpiof 15 GPIO_ACTIVE_LOW>;
+
+	w25x40cl: w25x40cl@0 {
+		compatible = "jedec,spi-nor";
+		status = "okay";
+		reg = <0>;
+		spi-max-frequency = <DT_FREQ_M(24)>;
+		/* size in bits: 4 Mbit = 512 KB */
+		size = <DT_SIZE_M(4)>;
+		has-dpd;
+		t-enter-dpd = <3000>;
+		t-exit-dpd = <24000>;
+		jedec-id = [ef 30 13];
+	};
+};
