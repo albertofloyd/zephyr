@@ -31,6 +31,10 @@ LOG_MODULE_DECLARE(espi, CONFIG_ESPI_LOG_LEVEL);
 
 #define K_WAIT_DELAY 100u
 
+#define WAIT_DELAY_MARKER_REG	0x40081164
+#define TIMEOUT_MARKER_REG	0x40081160
+#define REG32(a)     *((volatile uint32_t *)(uintptr_t)(a))
+
 /* eSPI event */
 #define EVENT_MASK         0x0000FFFFu
 #define EVENT_DETAILS_MASK 0xFFFF0000u
@@ -287,7 +291,9 @@ static int wait_for_vwire(const struct device *espi_dev, enum espi_vwire_signal 
 			break;
 		}
 
+		REG32(WAIT_DELAY_MARKER_REG) = 0x240;
 		k_usleep(K_WAIT_DELAY);
+		REG32(WAIT_DELAY_MARKER_REG) = 0x10240;
 		loop_cnt--;
 	} while (loop_cnt > 0);
 
@@ -330,11 +336,14 @@ int espi_handshake(void)
 		return ret;
 	}
 
+	REG32(TIMEOUT_MARKER_REG) = 0x240;
+
 	LOG_INF("1st phase completed");
 	ret = wait_for_vwire(espi_dev, ESPI_VWIRE_SIGNAL_SLP_S5, CONFIG_ESPI_VIRTUAL_WIRE_TIMEOUT,
 			     1);
 	if (ret) {
 		LOG_ERR("SLP_S5 Timeout");
+		REG32(TIMEOUT_MARKER_REG) = 0x10240;
 		return ret;
 	}
 
