@@ -7,7 +7,7 @@ mainmenu "Enhanced Serial Peripheral Interface application"
 
 config ESPI_VIRTUAL_WIRE_TIMEOUT
 	int "Timeout for virtual wires"
-	default 5000
+	default 60000
 	help
 	  Timeout for virtual wires
 

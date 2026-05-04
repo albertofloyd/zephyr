@@ -38,7 +38,20 @@ LOG_MODULE_DECLARE(espi, CONFIG_ESPI_LOG_LEVEL);
 #define EVENT_TYPE(x)      (x & EVENT_MASK)
 #define EVENT_DETAILS(x)   ((x & EVENT_DETAILS_MASK) >> EVENT_DETAILS_POS)
 
-#define PWR_SEQ_TIMEOUT 3000u
+/* 500 ms */
+#define PWR_SEQ_TIMEOUT 5000u
+
+/* 6 seconds */
+#define SUSWARN_TIMEOUT             60000
+#define SLPS5_TIMEOUT               60000
+#define SLPS4_TIMEOUT               60000
+#define PLT_RESET_TIMEOUT           60000
+/* 3 s */
+#define SLPS3_TIMEOUT               30000
+#define SLP_M_TIMEOUT               30000
+
+
+
 
 /* The devicetree node identifier for the board power rails pins. */
 #define BRD_PWR_NODE DT_NODELABEL(board_power)
