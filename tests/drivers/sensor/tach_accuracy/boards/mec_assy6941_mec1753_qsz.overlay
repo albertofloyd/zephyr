@@ -1,0 +1,49 @@
+/*
+ * Copyright (c) 2026 Microchip Technology Inc.
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * MEC ASSY6941 MEC1753-QSZ tachometer accuracy test overlay.
+ *
+ * Hardware wiring required:
+ *   Connect GPIO156 (tachsim output) to GPIO050 (tach0 input) via jumper wire.
+ *   GPIO156 is used as the pulse generator output (tachsim).
+ *   GPIO106 is used as the sw0 button trigger.
+ *   GPIO050 is the tachometer input (must be connected to GPIO156).
+ */
+
+#include <zephyr/dt-bindings/gpio/gpio.h>
+#include <zephyr/dt-bindings/gpio/microchip-xec-gpio.h>
+#include <zephyr/dt-bindings/interrupt-controller/mchp-xec-ecia.h>
+#include <zephyr/dt-bindings/clock/mchp_xec_pcr.h>
+
+/ {
+	aliases {
+		sw0 = &button0;
+		tachsim = &tach_pulse_gen;
+	};
+
+	gpio_keys {
+		compatible = "gpio-keys";
+		button0: button_0 {
+			gpios = <MCHP_GPIO_DECODE_106 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			label = "SW0 Button";
+		};
+	};
+
+	gpio_leds {
+		compatible = "gpio-leds";
+		tach_pulse_gen: tach_sim_output {
+			gpios = <MCHP_GPIO_DECODE_156 GPIO_ACTIVE_HIGH>;
+			label = "Tach Pulse Gen";
+		};
+	};
+};
+
+&tach0 {
+	compatible = "microchip,xec-tach";
+	status = "okay";
+	girqs = <MCHP_XEC_ECIA_GIRQ_ENC(17, 1)>;
+	pcr-scr = <MCHP_XEC_SCR_ENCODE(1, 2)>;
+	pinctrl-0 = <&ict0_tach0_gpio050>;
+	pinctrl-names = "default";
+};

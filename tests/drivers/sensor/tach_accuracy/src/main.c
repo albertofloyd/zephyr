@@ -25,9 +25,6 @@ LOG_MODULE_REGISTER(tach_accuracy, LOG_LEVEL_INF);
 #error "Sample requires enabled 'tach0' tachometer device in devicetree"
 #endif
 
-BUILD_ASSERT(DT_NODE_HAS_PROP(DT_NODELABEL(tach0), pulses_per_round),
-	     "tach0 must define pulses-per-round property");
-
 /* Button GPIO */
 #define BUTTON_NODE DT_ALIAS(sw0)
 static const struct gpio_dt_spec button = GPIO_DT_SPEC_GET(BUTTON_NODE, gpios);
@@ -40,8 +37,17 @@ static const struct gpio_dt_spec tach_sim = GPIO_DT_SPEC_GET(TACH_SIM_NODE, gpio
 /* Tachometer sensor device */
 static const struct device *const tach_dev = DEVICE_DT_GET(DT_NODELABEL(tach0));
 
-/* Get pulses-per-round from devicetree */
+/* Get pulses-per-round: check devicetree first, then Microchip Kconfig */
+#if DT_NODE_HAS_PROP(DT_NODELABEL(tach0), pulses_per_round)
 #define PULSES_PER_REV DT_PROP(DT_NODELABEL(tach0), pulses_per_round)
+#elif defined(CONFIG_TACH_XEC_EDGES)
+#define PULSES_PER_REV CONFIG_TACH_XEC_EDGES
+#else
+#error "tach0 must define pulses-per-round property or use Microchip XEC driver (CONFIG_TACH_XEC)"
+#endif
+
+/* Ensure pulses-per-round is valid */
+BUILD_ASSERT(PULSES_PER_REV > 0, "PULSES_PER_REV must be greater than zero");
 
 /* RPM test configuration */
 #define RPM_TOLERANCE_PERCENT 3  /* Acceptable RPM measurement tolerance: ±3% */
@@ -108,7 +114,7 @@ static void pulse_timer_handler(struct k_timer *timer)
 }
 
 /* Validate tachometer reading against expected RPM */
-static void validate_rpm_reading(uint32_t measured, uint32_t expected)
+static void validate_rpm_reading(uint16_t measured, uint16_t expected)
 {
 	int32_t error = abs((int32_t)measured - (int32_t)expected);
 	uint32_t tolerance = (expected * RPM_TOLERANCE_PERCENT) / PERCENT_SCALE;
@@ -194,10 +200,17 @@ static void tach_read_thread(void *arg1, void *arg2, void *arg3)
 	int ret;
 
 	LOG_INF("Tachometer monitoring thread started");
+
+	/* Wait for simulation to start (button press) before attempting fetches */
+	while (!sim_running) {
+		k_sleep(K_MSEC(100));
+	}
+
+	/* Allow pulses to stabilize after button press */
 	k_sleep(K_MSEC(TACH_STABILIZATION_MS));
 
 	while (1) {
-		ret = sensor_sample_fetch(tach_dev);
+		ret = sensor_sample_fetch_chan(tach_dev, SENSOR_CHAN_RPM);
 		if (ret) {
 			LOG_ERR("Failed to fetch sample: %d", ret);
 			k_sleep(K_SECONDS(TACH_POLL_INTERVAL_SEC));
@@ -212,7 +225,9 @@ static void tach_read_thread(void *arg1, void *arg2, void *arg3)
 		}
 
 		if (sim_running) {
-			validate_rpm_reading(rpm.val1, current_rpm);
+			uint16_t rpm_val = (uint16_t)rpm.val1;
+
+			validate_rpm_reading(rpm_val, current_rpm);
 		} else {
 			if (rpm.val1 == 0) {
 				LOG_INF("RPM: 0 (idle - no simulation running)");

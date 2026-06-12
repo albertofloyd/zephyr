@@ -14,3 +14,5 @@ tests:
   test.drivers.sensor.tach_accuracy:
     platform_allow:
       - rts5912_evb
+      - mec_assy6941_mec1753_qlj
+      - mec_assy6941_mec1753_qsz
