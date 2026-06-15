@@ -55,6 +55,11 @@ static int tach_xec_sample_fetch(const struct device *dev, enum sensor_channel c
 	pm_policy_state_lock_get(PM_STATE_SUSPEND_TO_IDLE, PM_ALL_SUBSTATES);
 
 	while (poll_count < PIN_STS_TIMEOUT) {
+		uint32_t status = tach->STATUS;
+		uint32_t control = tach->CONTROL;
+
+		LOG_DBG("Poll %d: STATUS=0x%x CONTROL=0x%x", poll_count, status, control);
+
 		/* See whether internal counter is already latched */
 		if (tach->STATUS & MCHP_TACH_STS_CNT_RDY) {
 			data->count =
@@ -71,6 +76,8 @@ static int tach_xec_sample_fetch(const struct device *dev, enum sensor_channel c
 	pm_policy_state_lock_put(PM_STATE_SUSPEND_TO_IDLE, PM_ALL_SUBSTATES);
 
 	if (poll_count == PIN_STS_TIMEOUT) {
+		LOG_WRN("Timeout after %d polls. Final: STATUS=0x%x CONTROL=0x%x",
+			PIN_STS_TIMEOUT, tach->STATUS, tach->CONTROL);
 		return -EINVAL;
 	}
 
@@ -142,17 +149,25 @@ static int tach_xec_pm_action(const struct device *dev, enum pm_device_action ac
 }
 #endif /* CONFIG_PM_DEVICE */
 
+#define REG32(p) (*(volatile uint32_t *) ((p)))
+
+#define LOG_DUMP_GPIOCFG(gpio_name, reg_addr) \
+	LOG_WRN("%s [%x]=%x", gpio_name, reg_addr, REG32(reg_addr))
+
+
 static int tach_xec_init(const struct device *dev)
 {
 	const struct tach_xec_config * const cfg = dev->config;
 	struct tach_regs * const tach = cfg->regs;
 
+	LOG_DUMP_GPIOCFG("TACH before GPIO050", 0x400810A0);
 	int ret = pinctrl_apply_state(cfg->pcfg, PINCTRL_STATE_DEFAULT);
 
 	if (ret != 0) {
 		LOG_ERR("XEC TACH pinctrl init failed (%d)", ret);
 		return ret;
 	}
+	LOG_DUMP_GPIOCFG("TACH after GPIO050", 0x400810A0);
 
 	tach_xec_sleep_clr(dev);
 
@@ -160,6 +175,8 @@ static int tach_xec_init(const struct device *dev)
 			TACH_CTRL_EDGES	                        |
 			MCHP_TACH_CTRL_FILTER_EN		|
 			MCHP_TACH_CTRL_EN;
+
+	LOG_INF("TACH initialized: CONTROL=0x%x STATUS=0x%x", tach->CONTROL, tach->STATUS);
 
 	return 0;
 }
