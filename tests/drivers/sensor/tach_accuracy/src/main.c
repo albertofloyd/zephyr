@@ -244,6 +244,12 @@ static void tach_read_thread(void *arg1, void *arg2, void *arg3)
 K_THREAD_DEFINE(tach_read_tid, TACH_THREAD_STACK_SIZE, tach_read_thread, 
 		NULL, NULL, NULL, TACH_THREAD_PRIORITY, 0, 0);
 
+
+#define REG32(p) (*(volatile uint32_t *) ((p)))
+
+#define LOG_DUMP_GPIOCFG(gpio_name, reg_addr) \
+	LOG_WRN("%s [%x]=%x", gpio_name, reg_addr, REG32(reg_addr))
+
 int main(void)
 {
 	int ret;
@@ -253,6 +259,10 @@ int main(void)
 	LOG_INF("       Tachometer Accuracy Test Sample        ");
 	LOG_INF("================================================");
 	LOG_INF("");
+
+	LOG_DUMP_GPIOCFG("TACH output GPIO050", 0x400810A0);
+	LOG_DUMP_GPIOCFG("SW0 button GPIO106", 0x40081118);
+	LOG_DUMP_GPIOCFG("TACH output GPIO156", 0x400811B8);
 
 	memset(&tach_stats, 0, sizeof(tach_stats));
 
