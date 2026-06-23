@@ -12,7 +12,7 @@ int main(void)
 
 	while (1) {
 		printk(".");
-		printf("x");
+		printf("r");
 	};
 
 	return 0;
