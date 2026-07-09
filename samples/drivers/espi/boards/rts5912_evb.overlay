@@ -7,9 +7,8 @@
 / {
 	board_power: resources {
 		   compatible = "intel-rvp,board-power";
-		   /* GPIO0 (A0) for pwrg, GPIO16 (B0) for rsm, update as needed */
-		   pwrg-gpios = <&gpioa 0 GPIO_ACTIVE_LOW>;
-		   rsm-gpios = <&gpiob 0 GPIO_ACTIVE_HIGH>;
+		   pwrg-gpios = <&gpioa 4 GPIO_ACTIVE_LOW>;
+		   rsm-gpios = <&gpiob 1 GPIO_ACTIVE_HIGH>;
 	   };
 };
 
